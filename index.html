@@ -236,7 +236,7 @@ function trackEvent(n,p){try{gtag('event',n,p||{})}catch(e){}try{fbq('track',n,p
     </div>
     <div class="checkbox-group">
       <input type="checkbox" id="consentCheck">
-      <label for="consentCheck">同意我們使用您提供的資料聯絡閣下，並提供 MPF 相關資訊（符合香港《個人資料（私隱）條例》）。</label>
+      <label for="consentCheck">同意我們使用您的個人資料（包括姓名、電話 / WhatsApp 號碼及電郵地址）向您發送強積金相關的最新推廣及優惠資訊。您可電郵聯絡我們要求停止接收推廣訊息。</label>
     </div>
     <button class="btn btn-primary" id="btnLead" onclick="submitLead()">🔓 解鎖完整報告</button>
   </div>
@@ -246,17 +246,17 @@ function trackEvent(n,p){try{gtag('event',n,p||{})}catch(e){}try{fbq('track',n,p
 <div id="phase3" class="hidden">
   <div class="card fade-in text-center" style="padding:32px 20px">
     <div class="success-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
-    <h2 style="margin-bottom:6px" id="ctaTitle">感謝你的查詢！</h2>
-    <p class="subtitle" id="ctaSub" style="margin-bottom:20px">你的專屬 PDF 報告已準備好，立即下載。</p>
+    <h2 style="margin-bottom:6px" id="ctaTitle">感謝你！</h2>
+    <p class="subtitle" id="ctaSub" style="margin-bottom:20px">你的專屬 PDF 報告已準備好，請按以下按鈕下載。</p>
     <div class="cta-section">
-      <h3 style="color:#f1f5f9;margin-bottom:12px">MPF 不應是一筆被遺忘的死錢。</h3>
-      <p>它需要季度檢視與動態調校。立即預約免費檢視，尋找你的最佳投資組合。</p>
+      <h3 style="color:#f1f5f9;margin-bottom:12px">MPF橫豎要供，不如定期檢視及動態調整。</h3>
+      <p>立即預約免費檢視，與專業顧問一起尋找你的最佳投資組合。</p>
       <a class="whatsapp-btn" id="whatsappLink" target="_blank">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        預約免費 1-on-1 強積金組合檢視與整合諮詢
+        預約免費強積金諮詢
       </a>
     </div>
-    <button class="btn btn-primary" id="btnPdf" style="margin-top:16px" onclick="generatePDF()">📄 下載你的 PDF 報告</button>
+    <button class="btn btn-primary" id="btnPdf" style="margin-top:16px" onclick="generatePDF()">📄 下載你的 MPF 詳細報告（PDF）</button>
     <button class="btn btn-outline" style="margin-top:12px" onclick="resetApp()">🔄 重新測試</button>
   </div>
 </div>
@@ -631,8 +631,8 @@ function resetApp(){
   document.getElementById('consentCheck').checked=false;
   document.getElementById('btnLead').innerHTML='🔓 解鎖完整報告';
   document.getElementById('btnLead').disabled=false;
-  document.getElementById('ctaTitle').textContent='感謝你的查詢！';
-  document.getElementById('ctaSub').textContent='你的專屬 PDF 報告已準備好，立即下載。';
+  document.getElementById('ctaTitle').textContent='感謝你！';
+  document.getElementById('ctaSub').textContent='你的專屬 PDF 報告已準備好，請按以下按鈕下載。';
   setStep(1);window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -782,15 +782,15 @@ function buildReportDOM(){
         <tbody>${fundRows}</tbody>
       </table>
       <div class="rp-callout"><strong>💡 點睇呢張表？</strong><br>
-      同一計劃內，不同基金的長短線表現可以相差很遠。綠色為最佳基金、紅色為最差基金、藍色為 DIS 核心累積基金。</div>
+      同一計劃內，不同基金的長短線表現可以相差很遠。表中綠色填滿列為最佳基金，紅色填滿列為最差基金，藍色填滿列為 DIS 核心累積基金。</div>
     </div>
 
     ${projSection}
 
     <div class="rp-sec">
       <span class="rp-badge">④ 下一步</span>
-      <div class="rp-lbl">MPF 不應是一筆被遺忘的死錢。</div>
-      <div class="rp-intro" style="margin-bottom:8px">它需要季度檢視與動態調校。立即預約免費 1-on-1 強積金組合檢視與整合諮詢，尋找你的最佳投資組合。</div>
+      <div class="rp-lbl">MPF橫豎要供，不如定期檢視及動態調整。</div>
+      <div class="rp-intro" style="margin-bottom:8px">立即預約免費檢視，與專業顧問一起尋找你的最佳投資組合。</div>
       <div class="rp-wa">
         <div class="n">📱 MPF 顧問：Caleb Lee</div>
         <div class="w">WhatsApp：9673 9044</div>
@@ -852,7 +852,7 @@ function generatePDF(){
     .catch(e=>{console.error('PDF error',e);alert('報告生成失敗，請重試');})
     .finally(()=>{
       if(reportChartInstance){reportChartInstance.destroy();reportChartInstance=null;}
-      btn.innerHTML='📄 下載你的 PDF 報告';
+      btn.innerHTML='📄 下載你的 MPF 詳細報告（PDF）';
       btn.disabled=false;
     });
 }
