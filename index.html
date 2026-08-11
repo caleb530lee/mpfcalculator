@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MPF 潛力測試 | 免費回測你的強積金</title>
+<meta name="description" content="免費 MPF 強積金潛力測試。選擇你的強積金計劃，即時獲取過去一年回測結果及退休財富推算。">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.3/dist/html2pdf.bundle.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans HK","PingFang HK","Microsoft YaHei",sans-serif;background:#0b1120;color:#e2e8f0;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.container{max-width:480px;margin:0 auto;padding:0 16px}
+.step-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:20px 16px 12px;background:#0f172a;border-bottom:1px solid #1e293b;position:sticky;top:0;z-index:50}
+.step-dot{width:10px;height:10px;border-radius:50%;background:#334155;transition:all 0.4s}
+.step-dot.active{background:#38bdf8;box-shadow:0 0 8px rgba(56,189,248,.5)}
+.step-dot.done{background:#22c55e}
+.step-line{width:32px;height:2px;background:#334155;transition:background .4s}
+.step-line.done{background:#22c55e}
+.card{background:#1a2332;border-radius:16px;border:1px solid #2a3a4e;padding:24px 20px;margin-bottom:20px}
+.hidden{display:none!important}
+h1{font-size:1.5rem;font-weight:700;line-height:1.3;letter-spacing:-.02em;margin-bottom:8px;color:#f1f5f9}
+h2{font-size:1.2rem;font-weight:600;margin-bottom:8px;color:#e2e8f0}
+h3{font-size:1.05rem;font-weight:600;margin-bottom:6px;color:#cbd5e1}
+.subtitle{font-size:.9rem;color:#94a3b8;margin-bottom:20px}
+.text-muted{color:#94a3b8;font-size:.85rem}
+.text-sm{font-size:.85rem}.text-xs{font-size:.75rem}.text-center{text-align:center}
+.text-green{color:#34d399}.text-red{color:#f87171}.text-amber{color:#fbbf24}.text-blue{color:#60a5fa}.text-purple{color:#a78bfa}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.85rem;font-weight:500;color:#94a3b8;margin-bottom:6px}
+.form-group .hint{display:block;font-size:.75rem;color:#64748b;margin-top:4px;line-height:1.4}
+.form-group input,.form-group select{width:100%;padding:12px 14px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#f1f5f9;font-size:1rem;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.form-group select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%2394a3b8'%3E%3Cpath d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.form-group input:focus,.form-group select:focus{border-color:#38bdf8;box-shadow:0 0 0 3px rgba(56,189,248,.15)}
+.form-group input::placeholder{color:#475569}
+.form-group select option{background:#1a2332;color:#e2e8f0}
+.form-row{display:flex;gap:12px}
+.form-row .form-group{flex:1}
+.btn{display:block;width:100%;padding:14px 20px;border:none;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,#38bdf8 0%,#818cf8 100%);color:#fff}
+.btn-primary:hover{box-shadow:0 4px 20px rgba(56,189,248,.3)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.btn-outline{background:transparent;color:#60a5fa;border:1px solid #334155}
+.btn-skip{background:transparent;color:#64748b;font-size:.85rem;border:none;cursor:pointer;padding:8px;text-decoration:underline}
+.btn-group{display:flex;gap:10px}
+.btn-group .btn{flex:1}
+.loading-spinner{display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-hero{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-radius:14px;padding:20px;margin-bottom:16px;border:1px solid #334155;text-align:center}
+.result-hero .big-number{font-size:1.8rem;font-weight:700;color:#fbbf24;margin:6px 0}
+.result-hero .label{font-size:.85rem;color:#94a3b8}
+.comparison-table{width:100%;border-collapse:collapse;margin:12px 0}
+.comparison-table th{text-align:left;font-size:.75rem;color:#64748b;font-weight:500;padding:8px 6px;border-bottom:1px solid #1e293b;text-transform:uppercase;letter-spacing:.05em}
+.comparison-table td{padding:10px 6px;border-bottom:1px solid #1e293b;font-size:.85rem}
+.comparison-table tr:last-child td{border-bottom:none}
+.comparison-table .fund-name{color:#cbd5e1;font-weight:500;font-size:.78rem}
+.comparison-table .fund-name .tag{display:inline-block;font-size:.65rem;padding:1px 6px;border-radius:4px;margin-left:4px;font-weight:400}
+.tag-best{background:rgba(52,211,153,.15);color:#34d399}
+.tag-worst{background:rgba(248,113,113,.15);color:#f87171}
+.tag-dis{background:rgba(96,165,250,.15);color:#60a5fa}
+.callout{background:#0f172a;border-left:3px solid #38bdf8;border-radius:0 8px 8px 0;padding:12px 14px;margin:16px 0;font-size:.85rem;color:#94a3b8;line-height:1.5}
+.callout strong{color:#e2e8f0}
+.chart-wrap{background:#0f172a;border-radius:12px;padding:12px;margin:16px 0}
+.chart-wrap canvas{width:100%!important;height:auto!important;max-height:300px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.principal-card{background:#0f172a;border-radius:10px;padding:12px 16px;margin:12px 0;display:flex;justify-content:space-between;align-items:center;border:1px solid #1e293b}
+.principal-card .label{font-size:.78rem;color:#64748b}
+.principal-card .value{font-size:1rem;font-weight:600;color:#e2e8f0}
+.dual-input .form-group{margin-bottom:12px}
+.checkbox-group{display:flex;align-items:flex-start;gap:10px;margin:12px 0}
+.checkbox-group input[type="checkbox"]{width:18px;height:18px;margin-top:3px;accent-color:#38bdf8;flex-shrink:0}
+.checkbox-group label{font-size:.8rem;color:#94a3b8;line-height:1.4;cursor:pointer}
+.cta-section{text-align:center;padding:24px 0}
+.cta-section p{font-size:.9rem;color:#94a3b8;margin-bottom:16px;line-height:1.6}
+.whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;padding:16px 24px;border-radius:14px;font-size:1.05rem;font-weight:600;text-decoration:none;transition:all .2s;border:none;cursor:pointer}
+.whatsapp-btn:hover{box-shadow:0 4px 24px rgba(37,211,102,.4);transform:translateY(-1px)}
+.whatsapp-btn svg{width:24px;height:24px;flex-shrink:0}
+.success-icon{display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:rgba(34,197,94,.15);margin:0 auto 16px}
+.success-icon svg{width:32px;height:32px;color:#22c55e}
+.fade-in{animation:fadeInUp .5s ease forwards;opacity:0;transform:translateY(16px)}
+@keyframes fadeInUp{to{opacity:1;transform:translateY(0)}}
+.fade-in-delay-1{animation-delay:.1s}.fade-in-delay-2{animation-delay:.2s}.fade-in-delay-3{animation-delay:.3s}
+.footer{padding:24px 16px;margin-top:32px;border-top:1px solid #1e293b}
+.footer p,.footer small{font-size:.65rem;color:#475569;line-height:1.5;display:block;margin-bottom:8px}
+.section-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;letter-spacing:.03em;margin-bottom:10px;text-transform:uppercase}
+.section-badge.phase1{background:rgba(56,189,248,.12);color:#38bdf8}
+.section-badge.phase2{background:rgba(167,139,250,.12);color:#a78bfa}
+.section-badge.phase3{background:rgba(251,191,36,.12);color:#fbbf24}
+@media(min-width:768px){.container{max-width:520px}h1{font-size:1.75rem}}
+.fund-count{font-size:.7rem;color:#475569;margin-top:2px}
+.avg-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(96,165,250,.12);border-radius:20px;padding:4px 10px;font-size:.75rem;color:#60a5fa;font-weight:500}
+.period-locked{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#0f172a;border:1px solid #334155;border-radius:10px;color:#f1f5f9;font-size:1rem;font-weight:600}
+.lock-tag{font-size:.7rem;color:#fbbf24;background:rgba(251,191,36,.12);padding:3px 8px;border-radius:20px;font-weight:500}
+/* ===== Stage 2: PDF report (light theme, A4) ===== */
+#reportRoot{position:relative;width:734px;background:#fff;color:#1e293b;font-family:"PingFang HK","Noto Sans HK",-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.55;font-size:14px}
+.report-shell{position:fixed;left:0;top:0;width:734px;height:0;overflow:hidden;z-index:-1;pointer-events:none}
+#reportRoot *{box-sizing:border-box}
+#reportRoot .rp-page{padding:20px 28px 16px}
+#reportRoot .rp-head{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #1e3a5f;padding-bottom:10px;margin-bottom:12px}
+#reportRoot .rp-title{font-size:19px;font-weight:800;color:#1e3a5f;letter-spacing:.02em}
+#reportRoot .rp-meta{font-size:10px;color:#64748b;text-align:right;line-height:1.6}
+#reportRoot .rp-greet{font-size:17px;font-weight:700;color:#0f172a;margin-bottom:4px}
+#reportRoot .rp-intro{font-size:12px;color:#475569;margin-bottom:12px}
+#reportRoot .rp-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:12px;page-break-inside:avoid}
+#reportRoot .rp-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;background:#e0f2fe;color:#0369a1;margin-bottom:8px}
+#reportRoot .rp-grid{display:flex;flex-wrap:wrap;justify-content:space-between}
+#reportRoot .rp-kv{display:flex;justify-content:space-between;gap:8px;width:48%;font-size:12px;padding:5px 0;border-bottom:1px dashed #e2e8f0}
+#reportRoot .rp-kv .k{color:#64748b;white-space:nowrap}
+#reportRoot .rp-kv .v{font-weight:600;color:#0f172a;text-align:right}
+#reportRoot .rp-hero{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;text-align:center;padding:11px 12px;margin-bottom:12px;page-break-inside:avoid}
+#reportRoot .rp-hero .lbl{font-size:12px;color:#92400e}
+#reportRoot .rp-hero .num{font-size:22px;font-weight:800;color:#d97706;margin:3px 0}
+#reportRoot .rp-hero .sub{font-size:10px;color:#a16207}
+#reportRoot table.rp-tbl{width:100%;border-collapse:collapse;font-size:11px;margin:6px 0;page-break-inside:avoid}
+#reportRoot table.rp-tbl th{background:#1e3a5f;color:#fff;padding:5px 7px;text-align:left;font-weight:600;font-size:10px}
+#reportRoot table.rp-tbl th.r{text-align:right}
+#reportRoot table.rp-tbl td{padding:5px 7px;border-bottom:1px solid #e2e8f0;vertical-align:middle}
+#reportRoot table.rp-tbl td.r{text-align:right;font-variant-numeric:tabular-nums}
+#reportRoot table.rp-tbl thead{display:table-header-group}
+#reportRoot table.rp-tbl tr.rp-best td{background:#f0fdf4}
+#reportRoot table.rp-tbl tr.rp-worst td{background:#fef2f2}
+#reportRoot table.rp-tbl tr.rp-dis td{background:#eff6ff}
+#reportRoot .rp-fund{font-weight:600;color:#334155}
+#reportRoot .rp-tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:4px;background:rgba(0,0,0,.06);font-weight:400;margin-left:4px}
+#reportRoot .rp-pos{color:#059669;font-weight:600}
+#reportRoot .rp-neg{color:#dc2626;font-weight:600}
+#reportRoot .rp-neutral{color:#475569}
+#reportRoot .rp-callout{background:#f0f9ff;border-left:4px solid #38bdf8;border-radius:0 8px 8px 0;padding:8px 10px;font-size:10.5px;color:#475569;margin:10px 0;page-break-inside:avoid}
+#reportRoot .rp-callout strong{color:#0f172a}
+#reportRoot .rp-chart{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;margin-bottom:12px;page-break-inside:avoid}
+#reportRoot .rp-chart canvas{width:640px;height:280px}
+#reportRoot .rp-principal{display:flex;justify-content:space-between;align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;margin-bottom:10px;page-break-inside:avoid}
+#reportRoot .rp-principal .l{font-size:10.5px;color:#64748b}
+#reportRoot .rp-principal .v{font-size:14px;font-weight:700;color:#0f172a}
+#reportRoot .rp-endgrid{display:flex;justify-content:space-between;margin-bottom:10px}
+#reportRoot .rp-end{flex:1;margin:0 4px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;text-align:center;padding:8px 6px;page-break-inside:avoid}
+#reportRoot .rp-end .l{font-size:10px;color:#64748b}
+#reportRoot .rp-end .v{font-size:14px;font-weight:700;margin-top:3px}
+#reportRoot .rp-matrix th,#reportRoot .rp-matrix td{text-align:center}
+#reportRoot .rp-wa{background:#dcfce7;border:2.5px solid #22c55e;border-radius:14px;padding:18px 20px;margin:14px 0;page-break-inside:avoid;text-align:center}
+#reportRoot .rp-wa .n{font-size:21px;font-weight:800;color:#14532d}
+#reportRoot .rp-wa .w{font-size:17px;font-weight:700;color:#15803d;margin-top:8px}
+#reportRoot .rp-wa .t{font-size:13px;color:#166534;margin-top:6px;line-height:1.5}
+#reportRoot .rp-foot{border-top:1px solid #e2e8f0;margin-top:8px;padding-top:10px;font-size:9px;color:#94a3b8;line-height:1.6}
+#reportRoot .rp-note{font-size:9.5px;color:#94a3b8;margin-top:3px}
+#reportRoot .rp-lbl{font-size:12px;font-weight:700;color:#0f172a;margin-bottom:6px}
+</style>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments)}
+gtag('js',new Date());gtag('config','G-XXXXXXXXXX');
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','000000000000000');fbq('track','PageView');
+function trackEvent(n,p){try{gtag('event',n,p||{})}catch(e){}try{fbq('track',n,p||{})}catch(e){}}
+</script>
+</head>
+<body>
+
+<div class="step-bar" id="stepBar">
+  <span class="step-dot active" id="s1"></span>
+  <span class="step-line" id="l1"></span>
+  <span class="step-dot" id="s2"></span>
+  <span class="step-line" id="l2"></span>
+  <span class="step-dot" id="s3"></span>
+</div>
+
+<div class="container" id="app">
+
+<!-- PHASE 1 -->
+<div id="phase1">
+  <div class="card fade-in">
+    <span class="section-badge phase1">📊 回測分析</span>
+    <h1>MPF 潛力測試：你的強積金，原本可以多賺多少？</h1>
+    <p class="subtitle">選擇你的強積金計劃，免費獲取你的專屬回測報告。</p>
+
+    <div class="form-group">
+      <label for="schemeSelect">你的強積金計劃</label>
+      <select id="schemeSelect"><option value="">正在載入計劃資料…</option></select>
+      <div id="schemeInfo" class="fund-count" style="margin-top:4px;"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="periodSelect">回報年期</label>
+      <select id="periodSelect" class="hidden">
+        <option value="1yr" selected>過去 1 年</option>
+      </select>
+      <div class="period-locked">📊 過去 1 年 <span class="lock-tag">🔒 完整版可解鎖 3 / 5 / 10 年</span></div>
+      <span class="hint">💡 想睇 3 / 5 / 10 年嘅完整分析？解鎖完整報告（PDF）後即可獲得。回報數據來自 MPFA 基金表現資料庫（截至 2026年7月30日）</span>
+    </div>
+
+    <div class="form-group">
+      <label for="current_balance">你目前的強積金總結餘（HKD）</label>
+      <input type="number" id="current_balance" placeholder="例如 500000" min="0" step="1000">
+    </div>
+
+    <div class="form-group">
+      <label for="monthly_contribution">每月總供款（僱主 + 僱員）</label>
+      <input type="number" id="monthly_contribution" placeholder="例如 3000" value="3000" min="0" step="100">
+      <span class="hint">💡 僱主和一般就業僱員須各自按有關入息的 5% 作出強制性供款，即共 10%。月薪 $30,000 或以上者均為 $3,000，可自行修改</span>
+    </div>
+
+    <button class="btn btn-primary" id="btnBacktest" onclick="runBacktest()">🔍 開始回測</button>
+  </div>
+  <div id="backtestResults" class="hidden"></div>
+</div>
+
+<!-- PHASE 2: 退休預測資料 + 解鎖報告 -->
+<div id="phase2" class="hidden">
+  <div class="card fade-in">
+    <span class="section-badge phase2">📈 退休預測</span>
+    <h2>你的退休財富藍圖</h2>
+    <p class="subtitle">填寫年齡，退休預測將包含於你的 PDF 報告中。</p>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="user_name">你怎樣稱呼？</label>
+        <input type="text" id="user_name" placeholder="陳先生" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label for="current_age">你目前年齡</label>
+        <input type="number" id="current_age" placeholder="30" min="18" max="64">
+      </div>
+    </div>
+    <div style="height:1px;background:#1e293b;margin:14px 0"></div>
+    <span class="section-badge phase3">🎯 解鎖報告</span>
+    <p class="subtitle" id="leadSubtitle">輸入聯絡方式，立即獲取你的專屬優質基金分析。</p>
+    <div class="dual-input">
+      <div class="form-group">
+        <label for="leadEmail">📧 電郵地址（選填）</label>
+        <input type="email" id="leadEmail" placeholder="example@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="leadWhatsapp">💬 WhatsApp 號碼（選填）</label>
+        <input type="tel" id="leadWhatsapp" placeholder="51234567（香港手機）" autocomplete="tel">
+      </div>
+    </div>
+    <div class="checkbox-group">
+      <input type="checkbox" id="consentCheck">
+      <label for="consentCheck">同意我們使用您提供的資料聯絡閣下，並提供 MPF 相關資訊（符合香港《個人資料（私隱）條例》）。</label>
+    </div>
+    <button class="btn btn-primary" id="btnLead" onclick="submitLead()">🔓 解鎖完整報告</button>
+    <div style="text-align:center;margin-top:12px">
+      <button class="btn-skip" onclick="skipLead()">跳過，直接預約 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHASE 3 -->
+<div id="phase3" class="hidden">
+  <div class="card fade-in text-center" style="padding:32px 20px">
+    <div class="success-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg></div>
+    <h2 style="margin-bottom:6px" id="ctaTitle">感謝你的查詢！</h2>
+    <p class="subtitle" id="ctaSub" style="margin-bottom:20px">你的專屬 PDF 報告已準備好，立即下載。</p>
+    <div class="cta-section">
+      <h3 style="color:#f1f5f9;margin-bottom:12px">MPF 不應是一筆被遺忘的死錢。</h3>
+      <p>它需要季度檢視與動態調校。立即預約免費檢視，尋找你的最佳投資組合。</p>
+      <a class="whatsapp-btn" id="whatsappLink" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        預約免費 1-on-1 強積金組合檢視與整合諮詢
+      </a>
+    </div>
+    <button class="btn btn-primary" id="btnPdf" style="margin-top:16px" onclick="generatePDF()">📄 下載你的 PDF 報告</button>
+    <button class="btn btn-outline" style="margin-top:12px" onclick="resetApp()">🔄 重新測試</button>
+  </div>
+</div>
+
+<div class="footer">
+  <p><strong>免責聲明</strong></p>
+  <small>本網站及報告提供的所有回測數據、圖表及預測結果僅供一般參考及教育用途，絕不構成任何形式的證券、金融產品或工具之邀請、招攬、建議、意見或任何保證。投資涉及風險，過去之表現不能作為將來表現之指引或預測。強積金基金的單位價格可升可跌，投資者可能會損失全數或部分投資本金。</small>
+  <small>系統內的退休推算模型基於特定的年化回報假設（如 1%、3%、5%），採用簡化之每月供款模型計算，並未扣除基金管理費（FER）及未計入通貨膨脹之影響，實際情況將因市場波動而有顯著差異。系統內的歷史數據擷取自公開資料庫，儘管我們已盡力確保數據的準確性，但恕不對任何數據錯誤、遺漏或延遲承擔法律責任。投資者在作出任何投資決定前，應詳細閱讀相關強積金計劃之銷售文件，並在需要時尋求獨立的專業財務及投資意見。</small>
+  <small style="display:block;margin-top:8px">資料來源：MPFA 基金表現 · 回報數據更新：2026年7月30日</small>
+</div>
+
+</div>
+
+<div class="report-shell" aria-hidden="true"><div id="reportRoot"></div></div>
+
+<script>
+const state = { trusteeData: null, schemeKey: null, schemeData: null, dataMeta: null, backtestResult: null, projectionResult: null, leadSubmitted: false, leadContact: null };
+// 表單後端（留空 = 只靠 WhatsApp 轉發）。免費選擇：
+//   ① Google Sheets（Apps Script）— 設定步驟見 docs/apps-script.md，部署後把 /exec 網址貼到下面
+//   ② Formspree:  https://formspree.io/f/你的ID        （要註冊，50 次/月免費）
+//   ③ FormSubmit: https://formsubmit.co/你的電郵        （免註冊，首次提交要開 Email 確認）
+const LEAD_ENDPOINT = 'https://script.google.com/macros/s/AKfycby2H589m4LWnLYoWWy9rSjLLd0txcB6EnCSXLlxs1fl_-2reS5DuIXpxKlcKkU5lSR6/exec';
+async function loadFundData() {
+  try {
+    const r = await fetch('fund_data.json?' + Date.now());
+    const d = await r.json();
+    state.trusteeData = d.trustees;
+    state.dataMeta = d.meta;
+    populateSchemes();
+  } catch(e) {
+    console.error('Failed:', e);
+    document.getElementById('btnBacktest').textContent = '⚠️ 數據載入失敗，請重新整理';
+    document.getElementById('btnBacktest').disabled = true;
+  }
+}
+
+function populateSchemes() {
+  const sel = document.getElementById('schemeSelect');
+  sel.innerHTML = '<option value="">請選擇你的強積金計劃</option>';
+  for (const [tid, trustee] of Object.entries(state.trusteeData)) {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = trustee.display_zh;
+    for (const [sid, scheme] of Object.entries(trustee.schemes)) {
+      const opt = document.createElement('option');
+      opt.value = tid + '|' + sid;
+      opt.textContent = scheme.scheme_zh + ' · ' + scheme.fund_count + '隻基金';
+      optgroup.appendChild(opt);
+    }
+    sel.appendChild(optgroup);
+  }
+}
+
+function onSchemeChange() {
+  const val = document.getElementById('schemeSelect').value;
+  const info = document.getElementById('schemeInfo');
+  if (!val) { info.textContent = ''; state.schemeKey = null; state.schemeData = null; return; }
+  const [tid, sid] = val.split('|');
+  const scheme = state.trusteeData[tid].schemes[sid];
+  state.schemeKey = { tid, sid };
+  state.schemeData = scheme;
+  const periodEl = document.getElementById('periodSelect');
+  const period = periodEl ? periodEl.value : '1yr';
+  const avg = scheme['avg_return_' + period];
+  if (avg != null) {
+    info.innerHTML = '<span class="avg-badge">📊 計劃平均回報（過去 ' + period.replace('yr','') + ' 年）：' + (avg >= 0 ? '+' : '') + (avg * 100).toFixed(2) + '%</span>';
+  } else {
+    info.innerHTML = '';
+  }
+}
+
+function setStep(s) {
+  [1,2,3].forEach(i => { const d=document.getElementById('s'+i); d.className='step-dot'; if(i<s) d.classList.add('done'); else if(i===s) d.classList.add('active'); });
+  [1,2].forEach(i => { const l=document.getElementById('l'+i); l.className='step-line'; if(i<s) l.classList.add('done'); });
+}
+
+function fmtHKD(n) {
+  if(n==null||isNaN(n)) return '—';
+  const a=Math.abs(Math.round(n));
+  if(a>=1e7) return (n<0?'-HK$':'HK$')+(a/1e7).toFixed(2)+'千萬';
+  if(a>=1e5) return (n<0?'-HK$':'HK$')+(a/1e4).toFixed(1)+'萬';
+  return (n<0?'-HK$':'HK$')+a.toLocaleString('en-US');
+}
+function fmtPercent(n) {
+  if(n==null||isNaN(n)) return '—';
+  return (n>=0?'+':'')+(n*100).toFixed(2)+'%';
+}
+
+// ====== BACKTEST ======
+const PERIOD_N = { '1yr': 1, '3yr': 3, '5yr': 5, '10yr': 10 };
+const PERIOD_LABEL = { '1yr': '過去 1 年', '3yr': '過去 3 年', '5yr': '過去 5 年', '10yr': '過去 10 年' };
+
+function runBacktest() {
+  const val = document.getElementById('schemeSelect').value;
+  const balance = parseFloat(document.getElementById('current_balance').value);
+  const monthly = parseFloat(document.getElementById('monthly_contribution').value);
+
+  if(!val){alert('請選擇你的強積金計劃');return}
+  if(!balance||balance<0){alert('請輸入有效嘅強積金總結餘');return}
+  if(!monthly||monthly<0){alert('請輸入每月供款金額');return}
+
+  const [tid, sid] = val.split('|');
+  const trustee = state.trusteeData[tid];
+  const scheme = trustee.schemes[sid];
+
+  // 回報年期（預設過去 1 年；選擇器已隱藏）
+  const periodEl = document.getElementById('periodSelect');
+  let period = periodEl ? periodEl.value : '1yr';
+  const rk = 'return_' + period;                       // return_1yr / return_3yr ...
+  let best = scheme['best_fund_' + period];
+  let worst = scheme['worst_fund_' + period];
+  let disRet = scheme['dis_core_return_' + period];
+  let avgRet = scheme['avg_return_' + period];
+  let fallback = false;
+  if ((!best || !worst || avgRet == null) && period !== '1yr') {
+    period = '1yr'; fallback = true;
+    best = scheme.best_fund_1yr; worst = scheme.worst_fund_1yr;
+    disRet = scheme.dis_core_return_1yr; avgRet = scheme.avg_return_1yr;
+  }
+  const N = PERIOD_N[period];
+  const pmt = monthly * 12;
+
+  let initBal = balance - (monthly * 12 * N);
+  if(initBal < 0) initBal = 0;
+
+  // 期末結餘 = 期初結餘全期複息 + 每月供款（平均約一半時間在市場）複息
+  function calcEnd(r) {
+    if (r == null) return null;
+    return initBal * Math.pow(1 + r, N) + pmt * N * Math.pow(1 + r, N / 2);
+  }
+  const bestR = best ? best[rk] : null;
+  const worstR = worst ? worst[rk] : null;
+  const bestEnd = calcEnd(bestR);
+  const worstEnd = calcEnd(worstR);
+  const disEnd = disRet != null ? calcEnd(disRet) : null;
+  const avgEnd = calcEnd(avgRet);
+  const prin = initBal + monthly * 12 * N;
+  const bestRAmt = bestEnd - prin;
+  const worstRAmt = worstEnd - prin;
+  const disRAmt = disEnd != null ? disEnd - prin : null;
+  const avgRAmt = avgEnd - prin;
+  const missed = bestEnd - worstEnd;
+
+  state.backtestResult = {
+    trustee, scheme, tid, sid, initBal, monthly, balance, period, N, fallback,
+    best, worst, disRet, avgRet, bestR, worstR,
+    bestEnd, worstEnd, disEnd, avgEnd, prin,
+    bestRAmt, worstRAmt, disRAmt, avgRAmt, missed
+  };
+  renderBacktest();
+  trackEvent('calculate_backtest', {trustee:tid,scheme:scheme.scheme_zh,period});
+  document.getElementById('leadSubtitle').textContent='輸入資料，立即獲取你的「完整 PDF 報告」— 包含退休預測、3 / 5 / 10 年回報分析及 '+scheme.scheme_zh+' 優質基金分析。';
+  document.getElementById('phase2').classList.remove('hidden');
+  setStep(2);
+  document.getElementById('backtestResults').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderBacktest() {
+  const r = state.backtestResult;
+  const c = document.getElementById('backtestResults');
+  c.classList.remove('hidden');
+
+  const pl = PERIOD_LABEL[r.period];
+
+  // 基金表現一覽：按 1 年回報排序（無數據排最後），標示最佳 / 最差 / DIS
+  const funds = r.scheme.funds.slice().sort((a, b) => (b.return_1yr == null ? -1 : b.return_1yr) - (a.return_1yr == null ? -1 : a.return_1yr));
+  const bestName = r.best ? r.best.name_zh : '';
+  const worstName = r.worst ? r.worst.name_zh : '';
+  const disName = r.scheme.dis_core_fund || '';
+  const fundRows = funds.map(f => {
+    const hl = f.name_zh === bestName ? '#34d399' : f.name_zh === worstName ? '#f87171' : f.name_zh === disName ? '#60a5fa' : null;
+    const tag = f.name_zh === bestName ? '<span class="tag tag-best">🏆</span>'
+      : f.name_zh === worstName ? '<span class="tag tag-worst">⚠️</span>'
+      : f.name_zh === disName ? '<span class="tag tag-dis">DIS</span>' : '';
+    const v = f.return_1yr;
+    const cell = v == null ? '<td style="text-align:right;color:#475569">—</td>'
+      : '<td style="text-align:right;color:' + (hl || '#94a3b8') + '">' + (v >= 0 ? '+' : '') + (v * 100).toFixed(2) + '%</td>';
+    return '<tr><td class="fund-name"' + (hl ? ' style="color:' + hl + '"' : '') + '>' + f.name_zh + tag + '</td>' + cell + '</tr>';
+  }).join('');
+
+  c.innerHTML = `
+    <div class="card fade-in fade-in-delay-1">
+      <div class="result-hero">
+        <div class="label">根據你的結餘，${pl}你的強積金表現差距可以高達</div>
+        <div class="big-number">${fmtHKD(r.missed)}</div>
+        ${r.fallback ? '<div class="text-xs" style="color:#64748b;margin-top:4px">⚠️ 所選年期數據不足，已改用過去 1 年回報計算</div>' : ''}
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="text-sm" style="color:#94a3b8">📋 ${r.scheme.scheme_zh}</div>
+        <span class="avg-badge">📊 計劃平均回報（${pl}）：${fmtPercent(r.avgRet)}</span>
+      </div>
+
+      <div class="callout">
+        <strong>💡 什麼是回測？</strong><br>
+        回測是利用${pl}的真實基金回報數據（年率化），推算如果你在該期間投資於不同基金的表現差異。注意：<strong>過去表現不代表將來回報</strong>。
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>基金</th>
+              <th style="text-align:right">模擬期末結餘</th>
+              <th style="text-align:right">回報金額</th>
+              <th style="text-align:right">${pl}回報</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="fund-name">${r.best.name_zh}<span class="tag tag-best">🏆 最佳</span></td>
+              <td style="text-align:right;color:#34d399;font-weight:600">${fmtHKD(r.bestEnd)}</td>
+              <td style="text-align:right;color:#34d399">+${fmtHKD(r.bestRAmt).replace('HK$','')}</td>
+              <td style="text-align:right;color:#34d399">${fmtPercent(r.bestR)}</td>
+            </tr>
+            ${r.disEnd != null && r.disRet != null ? `
+            <tr>
+              <td class="fund-name">${r.scheme.dis_core_fund}<span class="tag tag-dis">DIS</span></td>
+              <td style="text-align:right;color:#60a5fa;font-weight:600">${fmtHKD(r.disEnd)}</td>
+              <td style="text-align:right;color:#60a5fa">+${fmtHKD(r.disRAmt).replace('HK$','')}</td>
+              <td style="text-align:right;color:#60a5fa">${fmtPercent(r.disRet)}</td>
+            </tr>` : ''}
+            <tr>
+              <td class="fund-name">計劃平均<span class="tag tag-dis" style="background:rgba(167,139,250,.15);color:#a78bfa">📊 平均</span></td>
+              <td style="text-align:right;color:#a78bfa;font-weight:600">${fmtHKD(r.avgEnd)}</td>
+              <td style="text-align:right;color:#a78bfa">+${fmtHKD(r.avgRAmt).replace('HK$','')}</td>
+              <td style="text-align:right;color:#a78bfa">${fmtPercent(r.avgRet)}</td>
+            </tr>
+            <tr>
+              <td class="fund-name">${r.worst.name_zh}<span class="tag tag-worst">⚠️ 最差</span></td>
+              <td style="text-align:right;color:#f87171;font-weight:600">${fmtHKD(r.worstEnd)}</td>
+              <td style="text-align:right;color:#f87171">${fmtHKD(r.worstRAmt)}</td>
+              <td style="text-align:right;color:#f87171">${fmtPercent(r.worstR)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #1e293b">
+        <div class="text-sm" style="color:#64748b;margin-bottom:4px">總本金投入（期初 + ${r.N} 年供款）：${fmtHKD(r.prin)}</div>
+        <div class="text-sm" style="color:#64748b">期初推算結餘（${r.N} 年前）：${fmtHKD(r.initBal)}</div>
+        <div class="text-sm" style="color:#64748b">每月供款：${fmtHKD(r.monthly)}</div>
+      </div>
+    </div>
+
+    <div class="card fade-in fade-in-delay-2">
+      <h3>📋 ${r.scheme.scheme_zh} — 全部基金表現（過去 1 年）</h3>
+      <p class="text-sm text-muted" style="margin-bottom:8px">回報為 MPFA 年率化數據，按 1 年回報排序</p>
+      <div style="overflow-x:auto;max-height:340px;overflow-y:auto;">
+        <table class="comparison-table fund-table">
+          <thead>
+            <tr>
+              <th>基金</th>
+              <th style="text-align:right">1年</th>
+            </tr>
+          </thead>
+          <tbody>${fundRows}</tbody>
+        </table>
+      </div>
+      <div class="callout" style="margin-bottom:0">
+        <strong>💡 點睇呢張表？</strong><br>
+        同一計劃內，不同基金的短線表現可以相差很遠。藍色 DIS = 預設投資策略下的核心累積基金，是未作出選擇時的默認安排。想睇 3 / 5 / 10 年嘅完整分析？解鎖完整報告（PDF）即可獲得。
+      </div>
+    </div>
+
+  `;
+}
+
+// ====== PROJECTION (computed for the PDF report only — not shown on web) ======
+function computeProjection(){
+  const name = document.getElementById('user_name').value.trim() || '朋友';
+  const age = parseInt(document.getElementById('current_age').value);
+  const r = state.backtestResult;
+  if(!r) return null;
+  if(!age||age<18||age>64) return null;
+
+  const monthly = r.monthly, balance = r.balance;
+  const pmt = monthly * 12, years = 65 - age;
+  const rates = [0.01,0.03,0.05];
+  const labels = ['保守 1%','穩健 3%','積極 5%'];
+  const colors = ['#60a5fa','#34d399','#fbbf24'];
+  function fv(pv,rate,n){return pv*Math.pow(1+rate,n)+pmt*(Math.pow(1+rate,n)-1)/rate}
+
+  const datasets = rates.map((rate,i)=>{
+    const data=[];
+    let cp=balance;
+    for(let y=0;y<=years;y++){
+      if(y===0) data.push({age:age+y,value:balance,principal:balance});
+      else{cp+=pmt;data.push({age:age+y,value:fv(balance,rate,y),principal:cp})}
+    }
+    return {label:labels[i],data,color:colors[i],rate};
+  });
+  const endV=datasets.map(d=>d.data[years].value);
+  const pEnd=balance+pmt*years;
+  const gap=endV[2]-endV[0];
+
+  state.projectionResult={name,age,years,datasets,endV,gap,pEnd,pmt};
+  trackEvent('view_projection',{age,years});
+  return state.projectionResult;
+}
+
+
+
+// ====== LEAD ======
+function submitLead(){
+  const e=document.getElementById('leadEmail').value.trim();
+  const w=document.getElementById('leadWhatsapp').value.trim();
+  const ck=document.getElementById('consentCheck').checked;
+  const age=parseInt(document.getElementById('current_age').value);
+  if(!e&&!w){alert('請填寫至少一個聯絡方式（電郵或 WhatsApp）');return}
+  if(e&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){alert('請輸入有效嘅電郵地址');return}
+  if(w&&!/^[0-9]{8,15}$/.test(w)){alert('請輸入有效嘅香港手機號碼（8 位數字）');return}
+  if(!age||age<18||age>64){alert('請輸入有效年齡（18-64 歲）以生成退休預測');return}
+  if(!ck){alert('請同意私隱條款以繼續');return}
+  state.leadSubmitted=true;
+  state.leadContact=[e,w].filter(Boolean).join(' / ');
+  trackEvent('submit_lead',{has_email:!!e,has_whatsapp:!!w,age});
+  computeProjection();
+  // 如有設定表單後端，將 lead 資料發送出去（失敗不影響用戶流程）
+  const r=state.backtestResult;
+  if(LEAD_ENDPOINT&&r){
+    const fd=new URLSearchParams();
+    fd.append('name',document.getElementById('user_name').value.trim()||'未填寫');
+    fd.append('age',age);
+    fd.append('email',e||'未填寫');
+    fd.append('whatsapp',w||'未填寫');
+    fd.append('scheme',r.scheme.scheme_zh);
+    fd.append('trustee',r.trustee.display_zh);
+    fd.append('balance',Math.round(r.balance));
+    fd.append('monthly_contribution',Math.round(r.monthly));
+    fd.append('missed_growth',Math.round(r.missed));
+    fd.append('_subject','新 MPF 潛力測試 Lead');
+    fetch(LEAD_ENDPOINT,{method:'POST',body:fd,headers:{'Accept':'application/json'}})
+      .catch(err=>console.error('Lead 提交失敗（不影響用戶流程）',err));
+  }
+  document.getElementById('btnLead').innerHTML='<span class="loading-spinner"></span> 提交中...';
+  document.getElementById('btnLead').disabled=true;
+  setTimeout(()=>goToCTA(true),1200);
+}
+function skipLead(){computeProjection();goToCTA(false)}
+
+function buildWaMessage(){
+  const r=state.backtestResult;
+  const p=state.projectionResult;
+  let msg='你好，我剛完成了 MPF 潛力測試，發現我的組合有優化空間。我想預約 15 分鐘嘅免費檢視。';
+  if(r){
+    msg+='\n\n—— 測試資料 ——';
+    msg+='\n計劃：'+r.scheme.scheme_zh;
+    msg+='\n總結餘：HK$'+Math.round(r.balance).toLocaleString('en-US');
+    msg+='\n每月供款：HK$'+Math.round(r.monthly).toLocaleString('en-US');
+  }
+  if(p){msg+='\n姓名：'+p.name+'\n年齡：'+p.age+' 歲';}
+  if(state.leadContact){msg+='\n聯絡方式：'+state.leadContact;}
+  return msg;
+}
+
+// ====== CTA ======
+function goToCTA(did){
+  document.getElementById('phase1').classList.add('hidden');
+  document.getElementById('phase2').classList.add('hidden');
+  document.getElementById('phase3').classList.remove('hidden');
+  setStep(3);
+  if(!did){document.getElementById('ctaTitle').textContent='準備好認識你的強積金潛力？';document.getElementById('ctaSub').textContent='立即預約免費檢視，或下載你的完整 PDF 報告。'}
+  document.getElementById('whatsappLink').href='https://wa.me/85296739044?text='+encodeURIComponent(buildWaMessage());
+  document.getElementById('phase3').scrollIntoView({behavior:'smooth',block:'start'});
+  trackEvent('click_whatsapp_booking');
+}
+
+function resetApp(){
+  state.backtestResult=null;state.projectionResult=null;state.leadSubmitted=false;state.leadContact=null;
+  ['phase1','phase2','phase3'].forEach(id=>document.getElementById(id).classList.toggle('hidden',id!=='phase1'));
+  document.getElementById('backtestResults').classList.add('hidden');
+  document.getElementById('user_name').value='';document.getElementById('current_age').value='';
+  document.getElementById('leadEmail').value='';document.getElementById('leadWhatsapp').value='';
+  document.getElementById('consentCheck').checked=false;
+  document.getElementById('btnLead').innerHTML='🔓 解鎖完整報告';
+  document.getElementById('btnLead').disabled=false;
+  document.getElementById('ctaTitle').textContent='感謝你的查詢！';
+  document.getElementById('ctaSub').textContent='你的專屬 PDF 報告已準備好，立即下載。';
+  setStep(1);window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ====== STAGE 2: PDF REPORT ======
+let reportChartInstance = null;
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmtAmt(n){if(n==null||isNaN(n))return '—';return (n>=0?'+':'-')+fmtHKD(Math.abs(n)).replace('HK$','')}
+function calcEndFor(balance,monthly,ret,N){const initBal=Math.max(0,balance-monthly*12*N);return initBal*Math.pow(1+ret,N)+monthly*12*N*Math.pow(1+ret,N/2)}
+
+const MATRIX_LABEL = {'1yr':'1 年','3yr':'3 年','5yr':'5 年','10yr':'10 年'};
+
+function buildReportDOM(){
+  const r=state.backtestResult; if(!r) return;
+  const p=state.projectionResult;
+  const scheme=r.scheme, trustee=r.trustee;
+  const name=(p&&p.name)?p.name:'朋友';
+  const pl=PERIOD_LABEL[r.period];
+  const d=new Date();
+  const dateStr=d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
+  const srcDate=(state.dataMeta&&state.dataMeta.last_updated)||'2026年7月30日';
+
+  // 1yr comparison rows
+  const disRow=(r.disEnd!=null&&r.disRet!=null)
+    ? '<tr class="rp-dis"><td class="rp-fund">'+esc(scheme.dis_core_fund)+' <span class="rp-tag" style="color:#0369a1">DIS</span></td>'
+      +'<td class="r" style="color:#0369a1;font-weight:700">'+fmtHKD(r.disEnd)+'</td>'
+      +'<td class="r" style="color:#0369a1">'+fmtAmt(r.disRAmt)+'</td>'
+      +'<td class="r" style="color:#0369a1">'+fmtPercent(r.disRet)+'</td></tr>'
+    : '';
+  const compRows=
+    '<tr class="rp-best"><td class="rp-fund">'+esc(r.best.name_zh)+' <span class="rp-tag" style="color:#059669">🏆 最佳</span></td>'
+    +'<td class="r rp-pos" style="font-weight:700">'+fmtHKD(r.bestEnd)+'</td>'
+    +'<td class="r rp-pos">'+fmtAmt(r.bestRAmt)+'</td>'
+    +'<td class="r rp-pos">'+fmtPercent(r.bestR)+'</td></tr>'
+    +disRow
+    +'<tr><td class="rp-fund">📊 計劃平均</td>'
+    +'<td class="r rp-neutral" style="font-weight:700">'+fmtHKD(r.avgEnd)+'</td>'
+    +'<td class="r rp-neutral">'+fmtAmt(r.avgRAmt)+'</td>'
+    +'<td class="r rp-neutral">'+fmtPercent(r.avgRet)+'</td></tr>'
+    +'<tr class="rp-worst"><td class="rp-fund">'+esc(r.worst.name_zh)+' <span class="rp-tag" style="color:#dc2626">⚠️ 最差</span></td>'
+    +'<td class="r rp-neg" style="font-weight:700">'+fmtHKD(r.worstEnd)+'</td>'
+    +'<td class="r rp-neg">'+fmtAmt(r.worstRAmt)+'</td>'
+    +'<td class="r rp-neg">'+fmtPercent(r.worstR)+'</td></tr>';
+
+  // multi-period return matrix (1/3/5/10yr)
+  const matrixRows=['1yr','3yr','5yr','10yr'].map(pp=>{
+    const N=PERIOD_N[pp];
+    const bf=scheme['best_fund_'+pp], wf=scheme['worst_fund_'+pp];
+    const bR=bf?bf['return_'+pp]:null, wR=wf?wf['return_'+pp]:null;
+    const aR=scheme['avg_return_'+pp], dR=scheme['dis_core_return_'+pp];
+    const cell=(ret,nm)=>{
+      if(ret==null) return '<td>—</td>';
+      return '<td>'
+        +(nm?'<div class="rp-note" style="font-size:8.5px;line-height:1.3">'+esc(nm)+'</div>':'')
+        +'<div class="'+(ret>=0?'rp-pos':'rp-neg')+'">'+fmtPercent(ret)+'</div>'
+        +'<div class="rp-note">'+fmtHKD(calcEndFor(r.balance,r.monthly,ret,N))+'</div></td>';
+    };
+    return '<tr><td class="rp-fund">'+MATRIX_LABEL[pp]+'</td>'
+      +cell(bR,bf?bf.name_zh:null)
+      +cell(dR,null)
+      +cell(aR,null)
+      +cell(wR,wf?wf.name_zh:null)+'</tr>';
+  }).join('');
+
+  // full fund table
+  const funds=scheme.funds.slice().sort((a,b)=>(b.return_1yr==null?-1:b.return_1yr)-(a.return_1yr==null?-1:a.return_1yr));
+  const bestName=r.best?r.best.name_zh:'', worstName=r.worst?r.worst.name_zh:'', disName=scheme.dis_core_fund||'';
+  const fundRows=funds.map(f=>{
+    const cls=f.name_zh===bestName?'rp-best':f.name_zh===worstName?'rp-worst':f.name_zh===disName?'rp-dis':'';
+    const c=(v)=>v==null?'<td class="r rp-neutral">—</td>':'<td class="r '+(v>=0?'rp-pos':'rp-neg')+'">'+fmtPercent(v)+'</td>';
+    return '<tr class="'+cls+'"><td class="rp-fund">'+esc(f.name_zh)+'</td>'+c(f.return_1yr)+c(f.return_3yr)+c(f.return_5yr)+c(f.return_10yr)+'</tr>';
+  }).join('');
+
+  // projection section (only if user completed it)
+  const projSection = p ? `
+    <div class="rp-sec">
+      <span class="rp-badge">③ 退休預測</span>
+      <div class="rp-lbl">你的退休財富路線圖（${p.age} 歲 → 65 歲）</div>
+      <div class="rp-chart"><canvas id="reportChart" width="640" height="280"></canvas></div>
+      <div class="rp-principal">
+        <div><div class="l">距離退休，你的總供款（本金）</div><div class="v">${fmtHKD(p.pEnd)}</div></div>
+        <div style="text-align:right"><div class="l">每年供款</div><div class="v">${fmtHKD(p.pmt)}</div></div>
+      </div>
+      <div class="rp-endgrid">
+        ${p.datasets.map((ds,i)=>'<div class="rp-end"><div class="l">'+ds.label+'</div><div class="v" style="color:'+['#2563eb','#059669','#d97706'][i]+'">'+fmtHKD(p.endV[i])+'</div></div>').join('')}
+      </div>
+      <div class="rp-hero" style="background:#f5f3ff;border-color:#ddd6fe">
+        <div class="lbl" style="color:#5b21b6">${p.datasets[2].label} 與 ${p.datasets[0].label} 在 65 歲時的差距</div>
+        <div class="num" style="color:#7c3aed">${fmtHKD(p.gap)}</div>
+      </div>
+      <div class="rp-callout"><strong>💡 什麼是複息效應？</strong><br>
+      複息就是「利疊利」——你的投資回報會再投入市場，賺取更多回報。時間越長，效果越驚人。<br>
+      <span style="font-size:9px;color:#94a3b8">你由 ${p.age} 歲到 65 歲，共投入本金 ${fmtHKD(p.pEnd)}。積極策略下的預測結餘比保守策略多出 ${fmtHKD(p.gap)}。</span></div>
+    </div>` : '';
+
+  document.getElementById('reportRoot').innerHTML = `
+  <div class="rp-page">
+    <div class="rp-head">
+      <div class="rp-title">📊 MPF 潛力測試 · 專屬分析報告</div>
+      <div class="rp-meta">報告日期：${dateStr}<br>資料來源：MPFA 基金表現<br>數據更新：${srcDate}<br>顧問：Caleb Lee</div>
+    </div>
+    <div class="rp-greet">${esc(name)}，你好 👋</div>
+    <div class="rp-intro">以下係根據你提供嘅資料，為你生成嘅專屬 MPF 分析報告。報告包含回測分析、基金表現一覽及退休預測，僅供參考。</div>
+
+    <div class="rp-card">
+      <div class="rp-lbl">你的資料摘要</div>
+      <div class="rp-grid">
+        <div class="rp-kv"><span class="k">強積金計劃</span><span class="v">${esc(scheme.scheme_zh)}</span></div>
+        <div class="rp-kv"><span class="k">受託人</span><span class="v">${esc(trustee.display_zh)}</span></div>
+        <div class="rp-kv"><span class="k">目前結餘</span><span class="v">${fmtHKD(r.balance)}</span></div>
+        <div class="rp-kv"><span class="k">每月供款</span><span class="v">${fmtHKD(r.monthly)}</span></div>
+        <div class="rp-kv"><span class="k">年齡</span><span class="v">${p?p.age+' 歲':'—'}</span></div>
+        <div class="rp-kv"><span class="k">退休年齡</span><span class="v">65 歲</span></div>
+      </div>
+    </div>
+
+    <div class="rp-sec">
+      <span class="rp-badge">① 回測分析</span>
+      <div class="rp-hero">
+        <div class="lbl">根據你的結餘，${pl}你的強積金表現差距可以高達</div>
+        <div class="num">${fmtHKD(r.missed)}</div>
+        <div class="sub">最佳基金 vs 最差基金之模擬期末結餘差距（含每月供款複息）</div>
+      </div>
+      ${r.fallback?'<div style="font-size:10px;color:#b45309;margin-bottom:8px">⚠️ 所選年期數據不足，已改用過去 1 年回報計算</div>':''}
+      <table class="rp-tbl">
+        <thead><tr><th>基金</th><th class="r">模擬期末結餘</th><th class="r">回報金額</th><th class="r">${pl}回報</th></tr></thead>
+        <tbody>${compRows}</tbody>
+      </table>
+      <div class="rp-note">總本金投入（期初 + ${r.N} 年供款）：${fmtHKD(r.prin)} · 期初推算結餘：${fmtHKD(r.initBal)} · 每月供款：${fmtHKD(r.monthly)}</div>
+      <div class="rp-callout"><strong>💡 什麼是回測？</strong><br>
+      回測是利用${pl}的真實基金回報數據（年率化），推算如果你在該期間投資於不同基金的表現差異。注意：<strong>過去表現不代表將來回報</strong>。</div>
+    </div>
+
+    <div class="rp-sec">
+      <div class="rp-lbl" style="margin-top:6px">📈 多年期回報矩陣（年率化）</div>
+      <table class="rp-tbl rp-matrix">
+        <thead><tr><th>年期</th><th>🏆 最佳</th><th>DIS 核心累積</th><th>📊 計劃平均</th><th>⚠️ 最差</th></tr></thead>
+        <tbody>${matrixRows}</tbody>
+      </table>
+      <div class="rp-note">每格下方為模擬期末結餘（按你的結餘與每月供款推算）。DIS = 預設投資策略下的核心累積基金。</div>
+    </div>
+
+    <div class="rp-sec">
+      <span class="rp-badge">② 基金表現一覽</span>
+      <div class="rp-lbl">${esc(scheme.scheme_zh)} — 全部基金表現（1 / 3 / 5 / 10 年）</div>
+      <table class="rp-tbl">
+        <thead><tr><th>基金</th><th class="r">1年</th><th class="r">3年</th><th class="r">5年</th><th class="r">10年</th></tr></thead>
+        <tbody>${fundRows}</tbody>
+      </table>
+      <div class="rp-callout"><strong>💡 點睇呢張表？</strong><br>
+      同一計劃內，不同基金的長短線表現可以相差很遠。綠色為最佳基金、紅色為最差基金、藍色為 DIS 核心累積基金。</div>
+    </div>
+
+    ${projSection}
+
+    <div class="rp-sec">
+      <span class="rp-badge">④ 下一步</span>
+      <div class="rp-lbl">MPF 不應是一筆被遺忘的死錢。</div>
+      <div class="rp-intro" style="margin-bottom:8px">它需要季度檢視與動態調校。立即預約免費 1-on-1 強積金組合檢視與整合諮詢，尋找你的最佳投資組合。</div>
+      <div class="rp-wa">
+        <div class="n">📱 MPF 顧問：Caleb Lee</div>
+        <div class="w">WhatsApp：9673 9044</div>
+        <div class="t">電郵：caleb.ck.lee@fwdlife.com.hk</div>
+      </div>
+    </div>
+
+    <div class="rp-foot">
+      <strong>免責聲明</strong><br>
+      本報告提供的所有回測數據、圖表及預測結果僅供一般參考及教育用途，絕不構成任何形式的證券、金融產品或工具之邀請、招攬、建議、意見或任何保證。投資涉及風險，過去之表現不能作為將來表現之指引或預測。強積金基金的單位價格可升可跌，投資者可能會損失全數或部分投資本金。<br>
+      系統內的退休推算模型基於特定的年化回報假設（如 1%、3%、5%），採用簡化之每月供款模型計算，並未扣除基金管理費（FER）及未計入通貨膨脹之影響，實際情況將因市場波動而有顯著差異。系統內的歷史數據擷取自公開資料庫，儘管我們已盡力確保數據的準確性，但恕不對任何數據錯誤、遺漏或延遲承擔法律責任。投資者在作出任何投資決定前，應詳細閱讀相關強積金計劃之銷售文件，並在需要時尋求獨立的專業財務及投資意見。<br>
+      資料來源：MPFA 基金表現 · 回報數據更新：${srcDate} · 報告生成日期：${dateStr}<br>
+      <strong>Prepared by MPF Consultant: Caleb Lee</strong> · caleb.ck.lee@fwdlife.com.hk · WhatsApp: 9673 9044
+    </div>
+  </div>`;
+}
+
+function drawReportChart(){
+  const p=state.projectionResult;
+  if(!p) return;
+  const ctx=document.getElementById('reportChart');
+  if(!ctx) return;
+  if(reportChartInstance){reportChartInstance.destroy();reportChartInstance=null;}
+  const ages=p.datasets[0].data.map(d=>d.age);
+  const pl=p.datasets[0].data.map(d=>d.principal);
+  const colors=['#2563eb','#059669','#d97706'];
+  reportChartInstance=new Chart(ctx,{
+    type:'line',
+    data:{labels:ages,datasets:[
+      ...p.datasets.map((d,i)=>({label:d.label,data:d.data.map(pt=>Math.round(pt.value)),borderColor:colors[i],backgroundColor:colors[i]+'22',fill:false,tension:.3,pointRadius:0,borderWidth:2.5})),
+      {label:'本金累積（總供款）',data:pl.map(Math.round),borderColor:'#94a3b8',backgroundColor:'transparent',borderDash:[5,5],fill:false,tension:.3,pointRadius:0,borderWidth:1.5}
+    ]},
+    options:{responsive:false,devicePixelRatio:1,maintainAspectRatio:true,animation:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#334155',font:{size:11},padding:12,usePointStyle:true}},tooltip:{enabled:false}},
+      scales:{x:{grid:{color:'#e2e8f0'},ticks:{color:'#64748b',font:{size:10},maxTicksLimit:10},title:{display:true,text:'年齡',color:'#64748b',font:{size:10}}},y:{grid:{color:'#e2e8f0'},ticks:{color:'#64748b',font:{size:10},callback:v=>fmtHKD(v)}}}
+    }
+  });
+}
+
+function generatePDF(){
+  if(!state.backtestResult){alert('請先完成回測分析');return}
+  const btn=document.getElementById('btnPdf');
+  btn.innerHTML='<span class="loading-spinner"></span> 生成報告中...';
+  btn.disabled=true;
+  buildReportDOM();
+  drawReportChart();
+  const name=(state.projectionResult&&state.projectionResult.name)||'我的';
+  const safeName=name.replace(/[\\/:*?"<>|\s]+/g,'').slice(0,30)||'我的';
+  const opt={
+    margin:[8,8,12,8],
+    filename:'MPF報告_'+safeName+'.pdf',
+    image:{type:'jpeg',quality:0.95},
+    html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    pagebreak:{mode:['css','legacy']}
+  };
+  html2pdf().set(opt).from(document.getElementById('reportRoot')).save()
+    .then(()=>{trackEvent('download_pdf',{scheme:state.backtestResult.scheme.scheme_zh});})
+    .catch(e=>{console.error('PDF error',e);alert('報告生成失敗，請重試');})
+    .finally(()=>{
+      if(reportChartInstance){reportChartInstance.destroy();reportChartInstance=null;}
+      btn.innerHTML='📄 下載你的 PDF 報告';
+      btn.disabled=false;
+    });
+}
+
+// Init
+loadFundData();
+trackEvent('view_phase_1');
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('input[type="number"]').forEach(inp=>{
+    inp.addEventListener('keydown',e=>{if(e.key==='-'||e.key==='e')e.preventDefault()});
+  });
+  document.getElementById('schemeSelect').addEventListener('change', onSchemeChange);
+  document.getElementById('periodSelect').addEventListener('change', onSchemeChange);
+  // Enter key shortcuts
+  const e=(id,fn)=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')fn()});
+  e('current_balance',runBacktest);e('monthly_contribution',runBacktest);
+  e('leadEmail',submitLead);e('leadWhatsapp',submitLead);
+});
+</script>
+</body>
+</html>
