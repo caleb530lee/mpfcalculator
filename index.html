@@ -44,7 +44,6 @@ h3{font-size:1.05rem;font-weight:600;margin-bottom:6px;color:#cbd5e1}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed}
 .btn-secondary{background:#1e293b;color:#94a3b8;border:1px solid #334155}
 .btn-outline{background:transparent;color:#60a5fa;border:1px solid #334155}
-.btn-skip{background:transparent;color:#64748b;font-size:.85rem;border:none;cursor:pointer;padding:8px;text-decoration:underline}
 .btn-group{display:flex;gap:10px}
 .btn-group .btn{flex:1}
 .loading-spinner{display:inline-block;width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
@@ -240,9 +239,6 @@ function trackEvent(n,p){try{gtag('event',n,p||{})}catch(e){}try{fbq('track',n,p
       <label for="consentCheck">同意我們使用您提供的資料聯絡閣下，並提供 MPF 相關資訊（符合香港《個人資料（私隱）條例》）。</label>
     </div>
     <button class="btn btn-primary" id="btnLead" onclick="submitLead()">🔓 解鎖完整報告</button>
-    <div style="text-align:center;margin-top:12px">
-      <button class="btn-skip" onclick="skipLead()">跳過，直接預約 →</button>
-    </div>
   </div>
 </div>
 
@@ -599,8 +595,6 @@ function submitLead(){
   document.getElementById('btnLead').disabled=true;
   setTimeout(()=>goToCTA(true),1200);
 }
-function skipLead(){computeProjection();goToCTA(false)}
-
 function buildWaMessage(){
   const r=state.backtestResult;
   const p=state.projectionResult;
